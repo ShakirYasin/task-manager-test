@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  backend:
+    container_name: fullstack-backend
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    restart: always
+    networks:
+      - backend
+    depends_on:
+      - db
+
+  frontend:
+    container_name: fullstack-frontend
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    restart: always
+    networks:
+      - backend
+    depends_on:
+      - backend
+
+  db:
+    image: postgres:13
+    container_name: fullstack-db
+    environment:
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    external: true
