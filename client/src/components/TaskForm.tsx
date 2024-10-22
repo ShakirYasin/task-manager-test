@@ -2,17 +2,52 @@ import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '../store';
 import { createTask, TaskStatusEnum } from '../store/tasksSlice';
+import { useToast } from "@/hooks/use-toast"
 
 const TaskForm: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const { toast } = useToast()
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    dispatch(createTask({ title, description, status: TaskStatusEnum.PENDING }));
-    setTitle('');
-    setDescription('');
+    
+    if (title.trim() === '') {
+      toast({
+        title: "Error",
+        description: "Title cannot be empty",
+        variant: "destructive",
+      })
+      return;
+    }
+
+    if (description.trim() === '') {
+      toast({
+        title: "Error",
+        description: "Description cannot be empty",
+        variant: "destructive",
+      })
+      return;
+    }
+
+    dispatch(createTask({ title, description, status: TaskStatusEnum.PENDING }))
+      .unwrap()
+      .then(() => {
+        setTitle('');
+        setDescription('');
+        toast({
+          title: "Success",
+          description: "Task created successfully",
+        })
+      })
+      .catch((error) => {
+        toast({
+          title: "Error",
+          description: `Failed to create task: ${error.message}`,
+          variant: "destructive",
+        })
+      });
   };
 
   return (

@@ -11,24 +11,63 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { useToast } from "@/hooks/use-toast"
+
 
 const TaskList: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const tasks = useSelector((state: RootState) => state.tasks.tasks);
   const status = useSelector((state: RootState) => state.tasks.status);
+  const { toast } = useToast()
 
   useEffect(() => {
     if (status === 'idle') {
-      dispatch(fetchTasks());
+      dispatch(fetchTasks())
+        .unwrap()
+        .catch((error) => {
+          toast({
+            title: "Error",
+            description: `Failed to fetch tasks: ${error.message}`,
+            variant: "destructive",
+          })
+        });
     }
-  }, [status, dispatch]);
+  }, [status, dispatch, toast]);
 
   const handleStatusChange = (taskId: number, newStatus: TaskStatus) => {
-    dispatch(updateTask({ id: taskId, status: newStatus }));
+    dispatch(updateTask({ id: taskId, status: newStatus }))
+      .unwrap()
+      .then(() => {
+        toast({
+          title: "Success",
+          description: "Task status updated successfully",
+        })
+      })
+      .catch((error) => {
+        toast({
+          title: "Error",
+          description: `Failed to update task status: ${error.message}`,
+          variant: "destructive",
+        })
+      });
   };
 
   const handleDeleteTask = (taskId: number) => {
-    dispatch(deleteTask(taskId));
+    dispatch(deleteTask(taskId))
+      .unwrap()
+      .then(() => {
+        toast({
+          title: "Success",
+          description: "Task deleted successfully",
+        })
+      })
+      .catch((error) => {
+        toast({
+          title: "Error",
+          description: `Failed to delete task: ${error.message}`,
+          variant: "destructive",
+        })
+      });
   };
 
   if (status === 'loading') {
